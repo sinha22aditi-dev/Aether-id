@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AETHER.ID // Autonomous Biometric Search & Blockchain Registry</title>
+  
+  <!-- Modern Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  
+  <!-- Three.js 3D Library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <!-- Ambient Background Canvas & Glows -->
+  <canvas id="aether-3d-bg"></canvas>
+  <div class="glow-orb orb-teal"></div>
+  <div class="glow-orb orb-violet"></div>
+
+  <!-- Header / Navigation Bar -->
+  <header class="navbar">
+    <div class="brand">
+      <div class="brand-logo">
+        <span class="logo-symbol">⬡</span>
+      </div>
+      <div class="brand-text">
+        <h1 class="brand-title">AETHER<span class="highlight-teal">.ID</span></h1>
+        <p class="brand-subtitle">Autonomous Face ID & On-Chain Integrity</p>
+      </div>
+    </div>
+
+    <div class="header-status">
+      <div class="status-indicator" id="rpc-status-indicator" title="Checking Polygon Amoy status...">
+        <span class="status-dot dot-teal" id="rpc-dot"></span>
+        <span class="status-text" id="rpc-text">Polygon Amoy Connected</span>
+      </div>
+      <button class="btn btn-icon-only" id="open-diag-btn" title="View Blockchain Telemetry">⚙️</button>
+    </div>
+  </header>
+
+  <!-- Nav Tabs -->
+  <nav class="nav-bar">
+    <div class="nav-container">
+      <button class="tab-btn active" data-tab="tab-scan">
+        <span class="tab-step">01</span> Scanner & Search
+      </button>
+      <button class="tab-btn" data-tab="tab-verify">
+        <span class="tab-step">02</span> Re-Verification Sandbox
+      </button>
+      <button class="tab-btn" data-tab="tab-records">
+        <span class="tab-step">03</span> Audit Ledger
+      </button>
+      <button class="tab-btn" data-tab="tab-arch">
+        <span class="tab-step">04</span> Architecture
+      </button>
+    </div>
+  </nav>
+
+  <!-- Main Application Container -->
+  <main class="main-container">
+
+    <!-- ================================================================= -->
+    <!-- TAB 1: SCANNER & SEARCH PIPELINE -->
+    <!-- ================================================================= -->
+    <section class="tab-panel active" id="tab-scan">
+      
+      <!-- Hero / Input & 3D Interactive Grid -->
+      <div class="hero-grid">
+        
+        <!-- Left: Upload Card -->
+        <div class="glass-card upload-card">
+          <div class="card-title-row">
+            <h2>Biometric Face Input</h2>
+            <span class="badge badge-teal">Consented Input</span>
+          </div>
+          <p class="card-caption">
+            Upload a portrait image. The autonomous pipeline detects faces, generates 512-d embeddings, performs live reverse web discovery, and registers cryptographic proof on-chain.
+          </p>
+
+          <!-- Upload Drop Zone -->
+          <div class="drop-zone" id="drop-zone">
+            <input type="file" id="file-input" accept="image/*" style="display: none;">
+            <div class="drop-prompt" id="drop-prompt">
+              <div class="upload-icon">📷</div>
+              <p class="prompt-main">Drop face scan image here</p>
+              <p class="prompt-sub">Supports JPG, PNG, WEBP</p>
+            </div>
+            <img id="image-preview" class="preview-img" style="display: none;" alt="Preview Input">
+          </div>
+
+          <!-- Camera & Controls -->
+          <div class="input-actions">
+            <button class="btn btn-secondary" id="webcam-btn">📹 Live Camera</button>
+            <button class="btn btn-secondary" id="clear-btn" style="display: none;">✕ Clear</button>
+          </div>
+
+          <!-- Webcam Drawer -->
+          <div class="webcam-box" id="webcam-box" style="display: none;">
+            <video id="webcam-video" autoplay playsinline></video>
+            <button class="btn btn-primary btn-sm" id="snap-btn">📸 Capture Frame</button>
+          </div>
+
+          <!-- Optional Pipeline Options -->
+          <div class="options-accordion">
+            <button class="options-toggle-btn" id="toggle-options-btn">
+              <span>Advanced Threshold Options</span>
+              <span class="arrow-icon">▼</span>
+            </button>
+            <div class="options-content" id="options-content" style="display: none;">
+              <div class="options-grid">
+                <div class="input-group">
+                  <label for="threshold-input">Similarity Threshold</label>
+                  <input type="number" id="threshold-input" step="0.01" min="0.40" max="0.95" value="0.60" class="form-input">
+                </div>
+                <div class="input-group">
+                  <label for="face-index-input">Face Selection Index</label>
+                  <input type="number" id="face-index-input" min="0" placeholder="Auto (Largest)" class="form-input">
+                </div>
+              </div>
+              <div class="checkbox-group">
+                <label>
+                  <input type="checkbox" id="dry-run-checkbox">
+                  <span>Dry Run Mode (Simulate search without writing to Polygon)</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <button class="btn btn-primary btn-hero" id="run-pipeline-btn" disabled>
+            ⚡ Run Verification Pipeline
+          </button>
+        </div>
+
+        <!-- Right: 3D Visualization & Live Stage Flow -->
+        <div class="glass-card visualizer-card">
+          <div class="card-title-row">
+            <h2>Neural & Blockchain Telemetry</h2>
+            <span class="badge badge-subtle" id="pipeline-status-badge">IDLE</span>
+          </div>
+
+          <!-- 3D Scene Viewport -->
+          <div class="scene-container">
+            <canvas id="aether-3d-viewport"></canvas>
+            <div class="scene-overlay-tag" id="scene-stage-label">SYSTEM READY</div>
+          </div>
+
+          <!-- Clean Stage Stepper -->
+          <div class="stage-flow-bar">
+            <div class="stage-step" id="stage-detect">
+              <div class="step-dot"></div>
+              <span class="step-label">SCAN</span>
+            </div>
+            <div class="stage-line"></div>
+            <div class="stage-step" id="stage-embed">
+              <div class="step-dot"></div>
+              <span class="step-label">ENCODE</span>
+            </div>
+            <div class="stage-line"></div>
+            <div class="stage-step" id="stage-search">
+              <div class="step-dot"></div>
+              <span class="step-label">SEARCH</span>
+            </div>
+            <div class="stage-line"></div>
+            <div class="stage-step" id="stage-match">
+              <div class="step-dot"></div>
+              <span class="step-label">MATCH</span>
+            </div>
+            <div class="stage-line"></div>
+            <div class="stage-step" id="stage-canon">
+              <div class="step-dot"></div>
+              <span class="step-label">HASH</span>
+            </div>
+            <div class="stage-line"></div>
+            <div class="stage-step" id="stage-chain">
+              <div class="step-dot"></div>
+              <span class="step-label">COMMIT</span>
+            </div>
+          </div>
+
+          <!-- Detected Face Telemetry Box (Shown when face detected) -->
+          <div class="telemetry-bar" id="face-telemetry-bar" style="display: none;">
+            <div class="telemetry-crop">
+              <img id="telemetry-crop-img" alt="Crop">
+            </div>
+            <div class="telemetry-details">
+              <div class="tel-item"><span class="tel-label">Faces:</span> <span id="tel-faces" class="tel-val">1</span></div>
+              <div class="tel-item"><span class="tel-label">Bounding Box:</span> <span id="tel-box" class="tel-val mono">--</span></div>
+              <div class="tel-item"><span class="tel-label">Blur Score:</span> <span id="tel-blur" class="tel-val">--</span></div>
+            </div>
+          </div>
+
+          <!-- Expandable Technical Logs -->
+          <div class="logs-accordion">
+            <button class="logs-toggle-btn" id="toggle-logs-btn">
+              <span>View Technical Pipeline Logs</span>
+              <span class="arrow-icon">▼</span>
+            </button>
+            <div class="logs-content" id="logs-content" style="display: none;">
+              <div class="logs-list" id="logs-list">
+                <div class="log-row dim">Waiting for pipeline execution...</div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- On-Chain Workflow Diagram Card -->
+      <div class="glass-card chain-flow-card">
+        <div class="card-title-row">
+          <h3>On-Chain Verification Lifecycle</h3>
+          <span class="badge badge-teal">Smart Contract Provenance</span>
+        </div>
+        <div class="blockchain-flow-diagram">
+          <div class="node-box" id="flow-node-input">
+            <div class="node-icon">📷</div>
+            <div class="node-title">INPUT DATA</div>
+            <div class="node-sub">Biometric Image</div>
+          </div>
+          <div class="flow-connector"><div class="pulse-line"></div>➔</div>
+          <div class="node-box" id="flow-node-hash">
+            <div class="node-icon">🔑</div>
+            <div class="node-title">CANONICAL HASH</div>
+            <div class="node-sub">SHA-256 Fingerprint</div>
+          </div>
+          <div class="flow-connector"><div class="pulse-line"></div>➔</div>
+          <div class="node-box" id="flow-node-contract">
+            <div class="node-icon">📜</div>
+            <div class="node-title">SMART CONTRACT</div>
+            <div class="node-sub">FaceMatchRegistry</div>
+          </div>
+          <div class="flow-connector"><div class="pulse-line"></div>➔</div>
+          <div class="node-box" id="flow-node-network">
+            <div class="node-icon">⬡</div>
+            <div class="node-title">POLYGON AMOY</div>
+            <div class="node-sub">Chain ID 80002</div>
+          </div>
+          <div class="flow-connector"><div class="pulse-line"></div>➔</div>
+          <div class="node-box node-success" id="flow-node-verified">
+            <div class="node-icon">🛡️</div>
+            <div class="node-title">VERIFIED RECORD</div>
+            <div class="node-sub" id="flow-record-id-sub">On-Chain Registry</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Results Container (Revealed after successful run) -->
+      <div class="results-wrapper" id="results-wrapper" style="display: none;">
+        
+        <!-- On-Chain Confirmation Banner -->
+        <div class="result-banner" id="result-banner">
+          <div class="banner-badge-icon">✓</div>
+          <div class="banner-body">
+            <h3 id="res-banner-title">On-Chain Record Registered</h3>
+            <p id="res-banner-sub">
+              Assigned Record ID: <strong id="res-record-id">#0</strong> | Transaction: <span class="mono" id="res-tx-hash">0x...</span>
+            </p>
+          </div>
+          <a id="res-explorer-link" href="#" target="_blank" class="btn btn-secondary btn-sm">Explorer ↗</a>
+        </div>
+
+        <!-- Winner & Match Details -->
+        <div class="grid-2col gap-md">
+          
+          <!-- Winner Candidate Card -->
+          <div class="glass-card match-card">
+            <div class="card-title-row">
+              <h3>Discovered Source Match</h3>
+              <span class="badge badge-emerald" id="res-source-badge">SOCIAL_MEDIA</span>
+            </div>
+
+            <div class="winner-hero" id="winner-hero">
+              <div class="winner-img-box">
+                <img id="winner-img" src="/static/placeholder.jpg" alt="Discovered Match">
+              </div>
+              <div class="winner-info">
+                <div class="winner-rank">Rank #1 Best Match</div>
+                <h4 id="winner-title">Discovered Title</h4>
+                <p id="winner-platform" class="text-sub">Platform: X/Twitter</p>
+                
+                <div class="confidence-bar-container">
+                  <div class="confidence-header">
+                    <span>Biometric Similarity</span>
+                    <strong id="winner-sim-text">95.2%</strong>
+                  </div>
+                  <div class="confidence-track">
+                    <div class="confidence-fill" id="winner-sim-fill" style="width: 95.2%;"></div>
+                  </div>
+                </div>
+
+                <div class="winner-actions">
+                  <a id="winner-url-btn" href="#" target="_blank" class="btn btn-secondary btn-sm">View Source ↗</a>
+                  <button class="btn btn-primary btn-sm" id="verify-winner-btn">Verify Record</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Two-Tier Fingerprint Card -->
+          <div class="glass-card fingerprint-card">
+            <div class="card-title-row">
+              <h3>Two-Tier Canonical Data</h3>
+              <span class="badge badge-teal">Schema 2.0</span>
+            </div>
+            
+            <div class="fingerprint-display-box">
+              <div class="fp-label">Canonical SHA-256 Fingerprint (Tier A):</div>
+              <div class="fp-hash mono highlight-teal" id="res-content-hash">0x...</div>
+            </div>
+
+            <div class="json-tabs">
+              <div class="json-tab-headers">
+                <button class="json-tab-btn active" id="btn-json-tier-a">Tier A (Immutable Hashed)</button>
+                <button class="json-tab-btn" id="btn-json-tier-b">Tier B (Off-Chain Audit)</button>
+              </div>
+              <pre class="json-view"><code id="code-tier-a">{}</code></pre>
+              <pre class="json-view" style="display: none;"><code id="code-tier-b">{}</code></pre>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Candidate Pool Gallery -->
+        <div class="glass-card candidate-gallery-card">
+          <div class="card-title-row">
+            <h3>Discovered Candidate Pool</h3>
+            <span id="candidate-count-badge" class="badge badge-subtle">1 Candidates Evaluated</span>
+          </div>
+          <div class="candidate-grid" id="candidate-grid">
+            <!-- Candidate cards injected by JS -->
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ================================================================= -->
+    <!-- TAB 2: INDEPENDENT RE-VERIFICATION SANDBOX -->
+    <!-- ================================================================= -->
+    <section class="tab-panel" id="tab-verify">
+      <div class="glass-card verify-sandbox-card">
+        <div class="card-title-row">
+          <h2>Independent On-Chain Re-Verification Engine</h2>
+          <span class="badge badge-teal">Read-Only EVM Verification</span>
+        </div>
+        <p class="card-caption">
+          Independently verifies record integrity by reconstructing the SHA-256 fingerprint from supplied data and comparing it against the authoritative on-chain record stored in the <code>FaceMatchRegistry</code> smart contract on Polygon Amoy.
+        </p>
+
+        <!-- Sandbox Quick Actions -->
+        <div class="sandbox-actions">
+          <div class="input-group inline-group">
+            <label for="verify-record-id">Target Record ID</label>
+            <input type="number" id="verify-record-id" value="0" min="0" class="form-input input-short mono">
+          </div>
+          
+          <button class="btn btn-secondary" id="action-verify-orig">✓ Load Original Data</button>
+          <button class="btn btn-warning" id="action-verify-tamper">⚠️ Test Tampering</button>
+          <button class="btn btn-secondary" id="action-verify-unknown">❓ Check Unknown ID (#9999)</button>
+        </div>
+
+        <!-- Payload Editor -->
+        <div class="input-group" style="margin-top: 1.25rem;">
+          <label for="verify-json-payload">Verifiable Data Payload (JSON)</label>
+          <textarea id="verify-json-payload" rows="7" class="form-textarea mono"></textarea>
+        </div>
+
+        <div class="checkbox-group">
+          <label>
+            <input type="checkbox" id="verify-live-check" checked>
+            <span>Perform live HTTP reachability check on source URL</span>
+          </label>
+        </div>
+
+        <button class="btn btn-primary btn-hero" id="execute-verify-btn">
+          🔍 Execute Verification Check
+        </button>
+
+        <!-- Verification Results View -->
+        <div class="verify-output-box" id="verify-output-box" style="display: none;">
+          <div class="result-banner" id="verify-banner">
+            <div class="banner-badge-icon" id="v-status-icon">✓</div>
+            <div class="banner-body">
+              <h3 id="v-status-title">VERIFIED</h3>
+              <p id="v-status-msg">Record successfully verified on-chain.</p>
+            </div>
+          </div>
+
+          <div class="grid-2col gap-md" style="margin-top: 1.25rem;">
+            
+            <div class="glass-card sub-card">
+              <h4>Cryptographic Hash Match</h4>
+              <div class="metric-row">
+                <span class="m-label">Computed Hash:</span>
+                <span class="m-val mono highlight-teal" id="v-computed-hash">0x...</span>
+              </div>
+              <div class="metric-row">
+                <span class="m-label">On-Chain Hash:</span>
+                <span class="m-val mono highlight-teal" id="v-onchain-hash">0x...</span>
+              </div>
+              <div class="metric-row">
+                <span class="m-label">Hash Match Status:</span>
+                <strong id="v-hash-match" class="m-val text-emerald">MATCHED</strong>
+              </div>
+              <div class="metric-row">
+                <span class="m-label">Source Reachable:</span>
+                <strong id="v-source-reachable" class="m-val text-emerald">YES</strong>
+              </div>
+            </div>
+
+            <div class="glass-card sub-card">
+              <h4>On-Chain Record Metadata</h4>
+              <div class="metric-row">
+                <span class="m-label">Submitter Address:</span>
+                <span class="m-val mono" id="v-submitter">0x...</span>
+              </div>
+              <div class="metric-row">
+                <span class="m-label">Block Timestamp:</span>
+                <span class="m-val" id="v-timestamp">--</span>
+              </div>
+              <div class="metric-row">
+                <span class="m-label">Metadata URI:</span>
+                <span class="m-val mono" id="v-uri">--</span>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Tamper Discrepancy Table -->
+          <div class="tamper-analysis-box" id="tamper-analysis-box" style="display: none;">
+            <h4 class="text-red">Field-Level Discrepancy Analysis (Tamper Detected)</h4>
+            <div class="table-scroll">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Field</th>
+                    <th>Original On-Chain Value</th>
+                    <th>Altered (Tampered) Value</th>
+                  </tr>
+                </thead>
+                <tbody id="tamper-table-body">
+                  <!-- Injected via JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ================================================================= -->
+    <!-- TAB 3: AUDIT LEDGER -->
+    <!-- ================================================================= -->
+    <section class="tab-panel" id="tab-records">
+      <div class="glass-card">
+        <div class="card-title-row">
+          <h2>Cached Records & On-Chain Audit Trail</h2>
+          <button class="btn btn-secondary btn-sm" id="refresh-records-btn">↻ Refresh Ledger</button>
+        </div>
+        <p class="card-caption">
+          Audit history of biometric verification records committed to Polygon Amoy. Local SQLite storage serves as a local audit log and never substitutes on-chain cryptographic re-verification.
+        </p>
+
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Record ID</th>
+                <th>Type / Source</th>
+                <th>Content Hash (SHA-256)</th>
+                <th>Transaction Hash</th>
+                <th>Committed At</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="records-table-body">
+              <tr>
+                <td colspan="6" class="text-center dim">Loading registry records...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================================================================= -->
+    <!-- TAB 4: SYSTEM ARCHITECTURE -->
+    <!-- ================================================================= -->
+    <section class="tab-panel" id="tab-arch">
+      <div class="glass-card">
+        <div class="card-title-row">
+          <h2>AETHER.ID System Architecture</h2>
+          <span class="badge badge-violet">HH Goa 2026</span>
+        </div>
+
+        <div class="arch-stepper-grid">
+          <div class="arch-step-card">
+            <div class="arch-num">01</div>
+            <h4>Multi-Representation Search</h4>
+            <p>Queries reverse search engines using both Representation A (Full Scene Context) and Representation B (Padded Face Crop +20%).</p>
+          </div>
+          <div class="arch-step-card">
+            <div class="arch-num">02</div>
+            <h4>Provider Cascade</h4>
+            <p>Cascades from primary Google AI Studio Gemini Search (Grounding) to SerpApi Google Lens and TinEye reverse search engines.</p>
+          </div>
+          <div class="arch-step-card">
+            <div class="arch-num">03</div>
+            <h4>Biometric Match Authority</h4>
+            <p>FaceNet / InceptionResnetV1 (512-d L2 vector) serves as the sole biometric identity decision maker (Cosine Sim $\ge 0.60$, Margin $\ge 0.05$).</p>
+          </div>
+          <div class="arch-step-card">
+            <div class="arch-num">04</div>
+            <h4>Two-Tier Canonical Data</h4>
+            <p>Tier A (Immutable URL, Platform, Text, Image SHA-256) is hashed into contentHash. Tier B (Audit timestamps/latency) remains off-chain.</p>
+          </div>
+          <div class="arch-step-card">
+            <div class="arch-num">05</div>
+            <h4>Sequential Record ID</h4>
+            <p>Solidity contract keys records by sequential <code>recordId</code>, allowing verification to distinguish <code>TAMPER DETECTED</code> from <code>RECORD_NOT_FOUND</code>.</p>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Expandable Blockchain Diagnostics Modal/Drawer -->
+  <div class="modal-backdrop" id="diag-modal" style="display: none;">
+    <div class="glass-card modal-card">
+      <div class="card-title-row">
+        <h3>Blockchain Telemetry & Network Health</h3>
+        <button class="btn btn-icon-only" id="close-diag-btn">✕</button>
+      </div>
+      <div class="modal-body" id="diag-modal-body">
+        <p class="dim">Loading diagnostics...</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <p>AETHER.ID · Autonomous Biometric Search & Blockchain Registry · Built for HH Goa 2026</p>
+  </footer>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
