@@ -1,0 +1,57 @@
+# Project TODO & Execution Roadmap
+
+- [x] Analyze PRD v2 and review all requirements & architectural corrections
+- [x] Set up Python virtual environment & install all core dependencies (`torch`, `facenet-pytorch`, `web3`, `eth-tester`, `py-evm`, `py-solc-x`, `google-genai`, `imagehash`, `beautifulsoup4`, `fastapi`, `pytest`)
+- [x] Configure Solidity 0.8.20 compiler (`solcx`), write `contracts/FaceMatchRegistry.sol`, and compile universal EVM bytecode
+- [x] Establish project tracking: `PRD.md`, `TODO.md`, `PROJECT_HANDOVER.md`, `.env.example`, `.gitignore`, `requirements.txt`
+- [x] Build Face Processing Subsystem (`pipeline/face/`):
+  - [x] `pipeline/face/detector.py`: MTCNN/OpenCV face detection, blur validation, size validation, largest-face auto-selection
+  - [x] `pipeline/face/embedder.py`: InceptionResnetV1 512-d L2-normalized face embeddings & cosine similarity
+  - [x] Unit tests in `tests/test_face.py` (5 passed)
+- [x] Build Search & Discovery Cascade Subsystem (`pipeline/search/`):
+  - [x] `pipeline/search/base.py`: Provider interface & SearchResult model
+  - [x] `pipeline/search/representations.py`: Full Image (A) & Padded Face Crop (B) preparation
+  - [x] `pipeline/search/gemini_search.py`: Google AI Studio Gemini API (`gemini-2.5-flash`) with Google Search Grounding for candidate discovery
+  - [x] `pipeline/search/serpapi_search.py`: SerpApi Google Lens fallback integration
+  - [x] `pipeline/search/tineye_search.py`: TinEye API tertiary fallback
+  - [x] `pipeline/search/cascade.py`: Multi-provider cascade orchestrator & URL deduplication
+  - [x] `pipeline/search/fetch_candidates.py`: Live HTML page fetcher & candidate image parser
+  - [x] Unit tests in `tests/test_search.py` (6 passed)
+- [x] Build Matcher & Data Extraction Subsystem (`pipeline/match/`):
+  - [x] `pipeline/match/matcher.py`: Candidate face verification against original embedding + threshold/margin decision logic
+  - [x] `pipeline/match/extractor.py`: Structured post metadata & perceptual image hashing
+  - [x] Unit tests in `tests/test_matcher.py` (3 passed)
+- [x] Build Canonicalization Subsystem (`pipeline/canon/`):
+  - [x] `pipeline/canon/canonicalize.py`: Two-tier data model (Immutable Verifiable vs. Audit Metadata) + SHA-256 canonical hashing
+  - [x] Unit tests in `tests/test_canonicalize.py` (4 passed, idempotence + multi-run invariance regression tests)
+- [x] Build Blockchain Subsystem (`pipeline/chain/`):
+  - [x] `pipeline/chain/abi.py`: Pre-compiled universal EVM bytecode & ABI
+  - [x] `pipeline/chain/client.py`: Web3 client for Polygon Amoy & Local EVM
+  - [x] `pipeline/chain/writer.py`: `submitRecord` transaction creation & `recordId` parsing
+  - [x] `pipeline/chain/reader.py`: `getRecord` on-chain reader
+  - [x] `scripts/deploy_contract.py`: Contract deployer
+  - [x] Unit tests in `tests/test_blockchain.py` (4 passed)
+- [x] Build Local Cache & Storage Subsystem (`pipeline/storage/`):
+  - [x] `pipeline/storage/cache.py`: SQLite metadata cache & audit log (explicitly a cache, never verification source)
+- [x] Build Independent Verification Tooling:
+  - [x] `pipeline/verifier.py`: 6-state independent verification engine
+  - [x] `verify.py`: Independent 6-outcome verification CLI
+  - [x] `scripts/test_tamper.py`: Live demonstration of VERIFIED, TAMPER DETECTED, and RECORD_NOT_FOUND
+  - [x] `scripts/calibrate_threshold.py`: Threshold calibration script generating `calibration_report.md`
+  - [x] Unit tests in `tests/test_verify.py` (6 passed)
+- [x] Build Full Pipeline Orchestrator & CLI:
+  - [x] `pipeline/pipeline.py`: Orchestrated end-to-end execution
+  - [x] `main.py`: Autonomous CLI runner
+- [x] Build Modern High-Aesthetic Web Dashboard (`server/`):
+  - [x] `server/app.py`: FastAPI backend with `/api/scan`, `/api/verify`, `/api/records`, `/api/status`
+  - [x] `server/static/index.html`: Responsive UI with glassmorphism, webcam, stepper, diff table, and tabs
+  - [x] `server/static/style.css`: Cyberpunk theme, glowing borders, smooth animations
+  - [x] `server/static/app.js`: Live discovery pipeline runner & verification inspector
+- [x] Comprehensive Testing & Verification:
+  - [x] Run full pytest suite across all subsystems (27/27 tests passed)
+  - [x] Live tampering demonstration script passed
+  - [x] Biometric threshold sweep script passed and generated report
+- [x] Documentation & Handover:
+  - [x] `README.md` (comprehensive setup, faucets, pricing, CLI/UI guide)
+  - [x] `PROJECT_HANDOVER.md` (complete architecture, verification outputs, how to resume)
+  - [x] `TODO.md` (fully updated)

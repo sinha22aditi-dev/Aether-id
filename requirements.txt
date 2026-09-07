@@ -1,0 +1,32 @@
+# Core Face Recognition & Computer Vision (Biometric Authority)
+torch>=2.2.0
+torchvision>=0.17.0
+facenet-pytorch>=2.6.0
+opencv-python>=4.10.0
+numpy>=1.26.0
+pillow>=10.2.0
+ImageHash>=4.3.2
+
+# Blockchain & EVM Web3
+web3>=7.0.0
+eth-account>=0.13.0
+eth-tester>=0.12.0
+py-evm>=0.12.0
+py-solc-x>=2.0.5
+
+# Search APIs & Discovery
+google-genai>=2.3.0
+httpx>=0.28.0
+requests>=2.31.0
+beautifulsoup4>=4.12.0
+
+# API Server & Web UI
+fastapi>=0.110.0
+uvicorn>=0.30.0
+pydantic>=2.7.0
+python-dotenv>=1.0.1
+rich>=13.7.0
+
+# Testing & Quality
+pytest>=8.0.0
+pytest-asyncio>=0.23.0
